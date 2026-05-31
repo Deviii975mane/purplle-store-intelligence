@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # 1. The Enterprise Database Layer
+  db:
+    image: postgres:15-alpine
+    container_name: purplle_postgres_db
+    environment:
+      POSTGRES_USER: purplle_user
+      POSTGRES_PASSWORD: purplle_secure_password
+      POSTGRES_DB: apex_retail
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U purplle_user -d apex_retail" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 2. The Message Broker
+  redis:
+    image: redis:7-alpine
+    container_name: purplle_redis_broker
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 3. The Java Spring Boot Backend
+  api:
+    build:
+      context: ./backend-api
+      dockerfile: Dockerfile
+    container_name: purplle_spring_api
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/apex_retail
+      - SPRING_DATASOURCE_USERNAME=purplle_user
+      - SPRING_DATASOURCE_PASSWORD=purplle_secure_password
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+
+  # 4. The AI Computer Vision Pipeline
+  ai:
+    build:
+      context: ./ai-pipeline
+      dockerfile: Dockerfile
+    container_name: purplle_yolo_pipeline
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379

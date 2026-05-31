@@ -1,7 +1,7 @@
 -- database/init.sql
 
 CREATE TABLE IF NOT EXISTS store_sales (
-    id SERIAL PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     order_id VARCHAR(100),
     coupon_code VARCHAR(100),
     offer_name VARCHAR(255),
