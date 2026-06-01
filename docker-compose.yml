@@ -52,14 +52,11 @@ services:
       - SPRING_REDIS_PORT=6379
 
   # 4. The AI Computer Vision Pipeline
-  ai:
-    build:
-      context: ./ai-pipeline
-      dockerfile: Dockerfile
-    container_name: purplle_yolo_pipeline
+  ai-worker:
+    build: ./ai-pipeline
     depends_on:
-      redis:
-        condition: service_healthy
+      - redis
     environment:
+      - CAMERA_ID=${CAMERA_ID}
       - REDIS_HOST=redis
-      - REDIS_PORT=6379
+    restart: unless-stopped

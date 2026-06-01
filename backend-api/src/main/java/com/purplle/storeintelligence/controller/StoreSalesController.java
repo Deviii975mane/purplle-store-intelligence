@@ -1,5 +1,8 @@
 package com.purplle.storeintelligence.controller;
 
+import com.purplle.storeintelligence.entity.SecurityAlertEntity;
+import com.purplle.storeintelligence.repository.SecurityAlertRepository;
+
 import com.purplle.storeintelligence.entity.StoreSalesEntity;
 import com.purplle.storeintelligence.repository.StoreSalesRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +19,9 @@ public class StoreSalesController {
     @Autowired
     private StoreSalesRepository repository;
 
+    @Autowired
+    private SecurityAlertRepository alertRepository;
+
     // 1. The Acceptance Gate Checker
     @GetMapping("/system/health")
     public String healthCheck() {
@@ -27,5 +33,10 @@ public class StoreSalesController {
     public List<StoreSalesEntity> getRecentSales() {
         // We limit to 50 so the browser doesn't crash if they load a massive CSV later
         return repository.findAll().stream().limit(50).toList();
+    }
+
+    @GetMapping("/metrics/alerts")
+    public List<SecurityAlertEntity> getLiveAlerts() {
+        return alertRepository.findAll();
     }
 }
